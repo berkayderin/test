@@ -1,13 +1,12 @@
-import NextAuth from 'next-auth'
 import { Account, User as AuthUser } from 'next-auth'
-import GithubProvider from 'next-auth/providers/github'
+
 import CredentialsProvider from 'next-auth/providers/credentials'
-import bcrypt from 'bcryptjs'
+import NextAuth from 'next-auth'
 import User from '@/models/User'
+import bcrypt from 'bcryptjs'
 import connect from '@/utils/db'
 
 export const authOptions: any = {
-	// Configure one or more authentication providers
 	providers: [
 		CredentialsProvider({
 			id: 'credentials',
@@ -30,35 +29,12 @@ export const authOptions: any = {
 					throw new Error(err)
 				}
 			}
-		}),
-		GithubProvider({
-			clientId: process.env.GITHUB_ID ?? '',
-			clientSecret: process.env.GITHUB_SECRET ?? ''
 		})
-		// ...add more providers here
 	],
 	callbacks: {
 		async signIn({ user, account }: { user: AuthUser; account: Account }) {
 			if (account?.provider == 'credentials') {
 				return true
-			}
-			if (account?.provider == 'github') {
-				await connect()
-				try {
-					const existingUser = await User.findOne({ email: user.email })
-					if (!existingUser) {
-						const newUser = new User({
-							email: user.email
-						})
-
-						await newUser.save()
-						return true
-					}
-					return true
-				} catch (err) {
-					console.log('Error saving user', err)
-					return false
-				}
 			}
 		}
 	}
